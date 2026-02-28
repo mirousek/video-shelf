@@ -32,10 +32,7 @@ class Settings(BaseSettings):
     redis_url: str = ""
 
     # S3
-    s3_access_key: str = ""
-    s3_secret_key: str = ""
     s3_bucket: str = "videoshelf"
-    s3_region: str = ""
     use_s3: bool = True
 
     ffmpeg_path: str = "ffmpeg"
