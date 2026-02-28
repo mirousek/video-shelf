@@ -753,7 +753,6 @@ export default function App() {
                   <SegmentList
                     videos={videos}
                     activeIndex={activeIndex}
-                    outputTimeline={outputTimeline}
                     highlightVi={playingSeg?.vi ?? null}
                     highlightSi={playingSeg?.si ?? null}
                     onSelect={handleSelectVideo}

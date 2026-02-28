@@ -1,10 +1,9 @@
-import type { Clip, CutSegment, ProjectVideo } from "../types/api";
+import type { CutSegment, ProjectVideo } from "../types/api";
 import { colorForVideo } from "../utils/videoColors";
 
 interface Props {
   videos: ProjectVideo[];
   activeIndex: number;
-  outputTimeline: Clip[];
   highlightVi: number | null;
   highlightSi: number | null;
   onSelect: (videoIndex: number) => void;
@@ -14,7 +13,7 @@ interface Props {
   onAddToTimeline: (videoIndex: number, segIndex: number) => void;
 }
 
-export function SegmentList({ videos, activeIndex, outputTimeline, highlightVi, highlightSi, onSelect, onRemove, onUpdate, onPreview, onAddToTimeline }: Props) {
+export function SegmentList({ videos, activeIndex, highlightVi, highlightSi, onSelect, onRemove, onUpdate, onPreview, onAddToTimeline }: Props) {
   const totalSegments = videos.reduce((sum, v) => sum + v.segments.length, 0);
 
   if (totalSegments === 0) {
