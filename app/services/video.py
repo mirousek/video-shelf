@@ -311,12 +311,15 @@ def create_preview(input_path: Path, output_path: Path, max_height: int = 720) -
     """Transcode to H.264 MP4 that any browser can play. Capped at max_height for speed."""
     info = probe(input_path)
 
-    stream = ffmpeg.input(str(input_path))
+    inp = ffmpeg.input(str(input_path))
+    v = inp.video
+    a = inp.audio
     if info.height > max_height:
-        stream = stream.filter("scale", -2, f"min({max_height},ih)")
+        v = v.filter("scale", -2, f"min({max_height},ih)")
 
     (
-        stream.output(
+        ffmpeg.output(
+            v, a,
             str(output_path),
             vcodec="libx264",
             acodec="aac",
