@@ -1,0 +1,12 @@
+fastapi[standard]
+uvicorn[standard]
+celery[redis]
+redis
+ffmpeg-python
+boto3
+pydantic>=2.0
+pydantic-settings
+python-multipart
+websockets
+httpx
+watchdog
