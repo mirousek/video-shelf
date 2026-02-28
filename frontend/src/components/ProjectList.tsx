@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { deleteProject, getThumbnailUrl, listProjects } from "../services/api";
+import { deleteProject, getThumbnailUrl, getVideoStreamUrl, listProjects } from "../services/api";
 import type { ProjectResponse } from "../types/api";
 
 interface Props {
@@ -61,14 +61,19 @@ export function ProjectList({ onOpen, onNew, refreshKey }: Props) {
       ) : (
         <div className="project-grid">
           {projects.map((p) => {
-            const firstVideo = p.videos[0];
+            const coverMedia = p.videos.find((v) => v.video_info.media_type === "video") ?? p.videos[0];
+            const coverSrc = coverMedia
+              ? coverMedia.video_info.media_type === "image"
+                ? getVideoStreamUrl(coverMedia.video_id)
+                : getThumbnailUrl(coverMedia.video_id)
+              : undefined;
             const totalSegments = p.videos.reduce((sum, v) => sum + v.segments.length, 0);
             return (
               <div key={p.id} className="project-card" onClick={() => onOpen(p)}>
                 <div className="project-thumb">
-                  {firstVideo && (
+                  {coverSrc && (
                     <img
-                      src={getThumbnailUrl(firstVideo.video_id)}
+                      src={coverSrc}
                       alt={p.name}
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
