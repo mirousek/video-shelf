@@ -93,7 +93,11 @@ Estimated monthly cost after free tier: ~$10-15.
 ### Prerequisites
 
 - AWS CLI configured (`aws configure`)
-- A key pair for SSH access (`aws ec2 create-key-pair --key-name videoshelf --query 'KeyMaterial' --output text > videoshelf.pem`)
+- Import your SSH public key to AWS:
+  ```bash
+  aws ec2 import-key-pair --key-name videoshelf --public-key-material fileb://~/.ssh/id_ed25519.pub --region $REGION
+  ```
+  (Replace `id_ed25519.pub` with your actual public key filename, e.g. `id_rsa.pub`)
 
 ### 1. Create DynamoDB Tables
 
@@ -202,10 +206,9 @@ aws ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port
 
 ```bash
 # Amazon Linux 2023 ARM (t4g.micro ~ $6/mo, free-tier eligible)
-AMI_ID=$(aws ec2 describe-images \
-  --owners amazon \
-  --filters "Name=name,Values=al2023-ami-2023*-arm64" "Name=state,Values=available" \
-  --query 'sort_by(Images, &CreationDate)[-1].ImageId' \
+AMI_ID=$(aws ssm get-parameters \
+  --names /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64 \
+  --query 'Parameters[0].Value' \
   --output text --region $REGION)
 
 aws ec2 run-instances \
@@ -287,9 +290,9 @@ All settings are configured via environment variables prefixed with `VS_`:
 | `VS_SQS_QUEUE_NAME` | `videoshelf` | SQS queue name prefix for Celery |
 | `VS_USE_S3` | `true` | Enable S3 storage |
 | `VS_S3_BUCKET` | `videoshelf` | S3 bucket name |
-| `VS_S3_ACCESS_KEY` | (empty) | S3 access key (leave empty on EC2 to use IAM role) |
-| `VS_S3_SECRET_KEY` | (empty) | S3 secret key |
 | `VS_REDIS_URL` | (empty) | Redis URL (only for local dev without SQS) |
 | `VS_MAX_UPLOAD_SIZE_MB` | `2048` | Max upload size in MB |
+
+AWS credentials (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) are picked up by boto3 for all services (DynamoDB, SQS, S3). On EC2, use an IAM instance profile instead.
 
 See `.env.example` for a complete template.
