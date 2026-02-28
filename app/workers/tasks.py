@@ -67,7 +67,7 @@ def process_video(self, job_id: str) -> dict:
 
         for i, clip in enumerate(job.clips):
             input_path = storage.get_upload_path(clip.video_id)
-            output_path = storage.get_output_path(job_id, i, job.output_format)
+            output_path = storage.get_output_path(job_id, i, job.output_format, job.project_id)
 
             if clip.photo_duration is not None:
                 w = target_w if needs_normalize else 1920
@@ -105,11 +105,12 @@ def process_video(self, job_id: str) -> dict:
         output_files: list[str] = []
 
         if job.concat and len(clip_paths) > 1:
-            final_path = storage.get_concat_output_path(job_id, job.output_format)
+            final_path = storage.get_concat_output_path(job_id, job.output_format, job.project_id)
             video.concat_segments(clip_paths, final_path, job.output_format, crf=job.crf, preset=job.preset)
 
+            s3_prefix = f"outputs/{job.project_id}" if job.project_id else "outputs"
             if settings.use_s3:
-                s3_key = f"outputs/{final_path.name}"
+                s3_key = f"{s3_prefix}/{final_path.name}"
                 storage.upload_to_s3(final_path, s3_key)
                 output_files.append(s3_key)
             else:
@@ -118,9 +119,10 @@ def process_video(self, job_id: str) -> dict:
             for p in clip_paths:
                 storage.cleanup_local(p)
         else:
+            s3_prefix = f"outputs/{job.project_id}" if job.project_id else "outputs"
             for p in clip_paths:
                 if settings.use_s3:
-                    s3_key = f"outputs/{p.name}"
+                    s3_key = f"{s3_prefix}/{p.name}"
                     storage.upload_to_s3(p, s3_key)
                     output_files.append(s3_key)
                 else:

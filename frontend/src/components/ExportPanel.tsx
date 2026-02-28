@@ -6,6 +6,7 @@ import type { Clip, ProjectVideo } from "../types/api";
 interface Props {
   videos: ProjectVideo[];
   outputTimeline: Clip[];
+  projectId: string | null;
 }
 
 const QUALITY_PRESETS = [
@@ -16,7 +17,7 @@ const QUALITY_PRESETS = [
   { label: "Best", crf: 10, preset: "slower", hint: "Closest to original" },
 ] as const;
 
-export function ExportPanel({ videos, outputTimeline }: Props) {
+export function ExportPanel({ videos, outputTimeline, projectId }: Props) {
   const [format, setFormat] = useState("mp4");
   const [concat, setConcat] = useState(true);
   const [qualityIdx, setQualityIdx] = useState(2);
@@ -43,6 +44,7 @@ export function ExportPanel({ videos, outputTimeline }: Props) {
         concat,
         crf: QUALITY_PRESETS[qualityIdx].crf,
         preset: QUALITY_PRESETS[qualityIdx].preset,
+        project_id: projectId || undefined,
       });
       setJobId(res.id);
     } catch (e: any) {

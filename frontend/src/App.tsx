@@ -762,13 +762,13 @@ export default function App() {
                     onPreview={handlePreview}
                     onAddToTimeline={handleAddToTimeline}
                   />
-                  <ExportPanel videos={videos} outputTimeline={outputTimeline} />
+                  <ExportPanel videos={videos} outputTimeline={outputTimeline} projectId={projectId} />
                 </div>
               </div>
             </div>
-          </div>
+      </div>
         )}
       </main>
-    </div>
+      </div>
   );
 }

@@ -52,6 +52,7 @@ class JobCreate(BaseModel):
     )
     crf: int = Field(default=18, ge=0, le=51, description="H.264 CRF value (0=lossless, 51=worst). Lower = better quality.")
     preset: str = Field(default="medium", description="x264 encoding preset (ultrafast..veryslow). Slower = better quality per bit.")
+    project_id: str = ""
 
 
 class Job(BaseModel):
@@ -61,6 +62,7 @@ class Job(BaseModel):
     concat: bool
     crf: int = 18
     preset: str = "medium"
+    project_id: str = ""
     status: JobStatus = JobStatus.PENDING
     progress: float = 0.0
     output_files: list[str] = Field(default_factory=list)

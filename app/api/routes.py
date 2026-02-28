@@ -95,6 +95,7 @@ async def create_job(request: JobCreate):
         concat=request.concat,
         crf=request.crf,
         preset=request.preset,
+        project_id=request.project_id,
     )
     jobstore.save_job(job)
 
@@ -206,8 +207,7 @@ async def get_thumbnail(video_id: str, t: float = 1.0):
     if not upload_path.exists():
         raise HTTPException(status_code=404, detail="Video not found")
 
-    thumb_path = settings.output_dir / f"thumb_{video_id}.jpg"
-    settings.output_dir.mkdir(parents=True, exist_ok=True)
+    thumb_path = storage.get_thumbnail_path(video_id)
     video.generate_thumbnail(upload_path, thumb_path, timestamp=t)
     return FileResponse(thumb_path, media_type="image/jpeg")
 

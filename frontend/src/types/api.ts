@@ -34,6 +34,7 @@ export interface JobCreate {
   concat: boolean;
   crf?: number;
   preset?: string;
+  project_id?: string;
 }
 
 export type JobStatus = "pending" | "processing" | "completed" | "failed";

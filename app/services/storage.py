@@ -34,14 +34,26 @@ def get_preview_path(video_id: str) -> Path:
     return settings.upload_dir / f"{stem}_preview.mp4"
 
 
-def get_output_path(job_id: str, index: int, output_format: str) -> Path:
-    _ensure_local_dirs()
-    return settings.output_dir / f"{job_id}_{index}.{output_format}"
+def _output_base(project_id: str = "") -> Path:
+    base = settings.output_dir / project_id if project_id else settings.output_dir
+    base.mkdir(parents=True, exist_ok=True)
+    return base
 
 
-def get_concat_output_path(job_id: str, output_format: str) -> Path:
+def get_output_path(job_id: str, index: int, output_format: str, project_id: str = "") -> Path:
     _ensure_local_dirs()
-    return settings.output_dir / f"{job_id}_final.{output_format}"
+    return _output_base(project_id) / f"{job_id}_{index}.{output_format}"
+
+
+def get_concat_output_path(job_id: str, output_format: str, project_id: str = "") -> Path:
+    _ensure_local_dirs()
+    return _output_base(project_id) / f"{job_id}_final.{output_format}"
+
+
+def get_thumbnail_path(video_id: str) -> Path:
+    thumbs_dir = settings.output_dir / "thumbs"
+    thumbs_dir.mkdir(parents=True, exist_ok=True)
+    return thumbs_dir / f"thumb_{video_id}.jpg"
 
 
 # --- S3 operations ---
