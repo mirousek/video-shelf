@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import shutil
 import uuid
 from pathlib import Path
 
@@ -49,14 +48,16 @@ def get_concat_output_path(job_id: str, output_format: str) -> Path:
 
 
 def _get_s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.s3_endpoint,
-        aws_access_key_id=settings.s3_access_key,
-        aws_secret_access_key=settings.s3_secret_key,
-        region_name=settings.s3_region,
-        config=BotoConfig(signature_version="s3v4"),
-    )
+    kwargs: dict = {
+        "region_name": settings.s3_region or settings.aws_region,
+        "config": BotoConfig(signature_version="s3v4"),
+    }
+    if settings.s3_endpoint:
+        kwargs["endpoint_url"] = settings.s3_endpoint
+    if settings.s3_access_key:
+        kwargs["aws_access_key_id"] = settings.s3_access_key
+        kwargs["aws_secret_access_key"] = settings.s3_secret_key
+    return boto3.client("s3", **kwargs)
 
 
 def ensure_bucket() -> None:
@@ -66,7 +67,11 @@ def ensure_bucket() -> None:
     try:
         client.head_bucket(Bucket=settings.s3_bucket)
     except ClientError:
-        client.create_bucket(Bucket=settings.s3_bucket)
+        region = settings.s3_region or settings.aws_region
+        create_kwargs: dict = {"Bucket": settings.s3_bucket}
+        if region != "us-east-1":
+            create_kwargs["CreateBucketConfiguration"] = {"LocationConstraint": region}
+        client.create_bucket(**create_kwargs)
         logger.info("Created S3 bucket: %s", settings.s3_bucket)
 
 

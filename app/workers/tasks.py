@@ -101,7 +101,6 @@ def process_video(self, job_id: str) -> dict:
             if job.concat:
                 progress *= 0.8
             jobstore.update_job_status(job_id, JobStatus.PROCESSING, progress=progress)
-            jobstore.publish_progress(job_id, progress)
 
         output_files: list[str] = []
 
@@ -133,8 +132,6 @@ def process_video(self, job_id: str) -> dict:
             progress=1.0,
             output_files=output_files,
         )
-        jobstore.publish_progress(job_id, 1.0)
-
         return {"status": "completed", "output_files": output_files}
 
     except Exception as e:

@@ -1,42 +1,54 @@
-"""Simple Redis-backed job store for tracking processing jobs."""
+"""DynamoDB-backed job store for tracking processing jobs."""
 
 from __future__ import annotations
 
-import json
 import logging
+import time
 from datetime import datetime
 
-import redis
+import boto3
+from botocore.exceptions import ClientError
 
 from app.config import settings
 from app.models.schemas import Job, JobStatus
 
 logger = logging.getLogger(__name__)
 
-_redis: redis.Redis | None = None
+JOB_TTL_SECONDS = 86400
+
+_table = None
 
 
-def _get_redis() -> redis.Redis:
-    global _redis
-    if _redis is None:
-        _redis = redis.from_url(settings.redis_url, decode_responses=True)
-    return _redis
-
-
-def _key(job_id: str) -> str:
-    return f"videoshelf:job:{job_id}"
+def _get_table():
+    global _table
+    if _table is None:
+        kwargs = {"region_name": settings.aws_region}
+        if settings.aws_endpoint_url:
+            kwargs["endpoint_url"] = settings.aws_endpoint_url
+        dynamo = boto3.resource("dynamodb", **kwargs)
+        _table = dynamo.Table(settings.dynamodb_jobs_table)
+    return _table
 
 
 def save_job(job: Job) -> None:
     job.updated_at = datetime.utcnow()
-    _get_redis().set(_key(job.id), job.model_dump_json(), ex=86400)
+    _get_table().put_item(Item={
+        "id": job.id,
+        "data": job.model_dump_json(),
+        "expires_at": int(time.time()) + JOB_TTL_SECONDS,
+    })
 
 
 def get_job(job_id: str) -> Job | None:
-    data = _get_redis().get(_key(job_id))
-    if data is None:
+    try:
+        resp = _get_table().get_item(Key={"id": job_id})
+    except ClientError:
+        logger.exception("Failed to get job %s", job_id)
         return None
-    return Job.model_validate_json(data)
+    item = resp.get("Item")
+    if item is None:
+        return None
+    return Job.model_validate_json(item["data"])
 
 
 def update_job_status(
@@ -60,11 +72,3 @@ def update_job_status(
 
     save_job(job)
     return job
-
-
-def publish_progress(job_id: str, progress: float) -> None:
-    """Publish progress update to a Redis channel for WebSocket relay."""
-    _get_redis().publish(
-        f"videoshelf:progress:{job_id}",
-        json.dumps({"job_id": job_id, "progress": progress}),
-    )

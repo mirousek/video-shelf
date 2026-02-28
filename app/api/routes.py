@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import json
+import asyncio
 import logging
 from pathlib import Path
 
-import redis.asyncio as aioredis
 from fastapi import APIRouter, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 
@@ -215,7 +214,7 @@ async def get_thumbnail(video_id: str, t: float = 1.0):
 
 @router.websocket("/ws/jobs/{job_id}/progress")
 async def job_progress_ws(websocket: WebSocket, job_id: str):
-    """WebSocket endpoint for real-time progress updates on a job."""
+    """WebSocket endpoint for real-time progress updates on a job (polls DynamoDB)."""
     await websocket.accept()
 
     job = jobstore.get_job(job_id)
@@ -229,29 +228,14 @@ async def job_progress_ws(websocket: WebSocket, job_id: str):
         await websocket.close()
         return
 
-    r = aioredis.from_url(settings.redis_url, decode_responses=True)
-    pubsub = r.pubsub()
-    channel = f"videoshelf:progress:{job_id}"
-
     try:
-        await pubsub.subscribe(channel)
-
         while True:
-            message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-            if message and message["type"] == "message":
-                data = json.loads(message["data"])
-                await websocket.send_json(data)
-                if data.get("progress", 0) >= 1.0:
-                    break
-
+            await asyncio.sleep(1.0)
             job = jobstore.get_job(job_id)
-            if job and job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
-                await websocket.send_json({"status": job.status, "progress": job.progress})
+            if job is None:
                 break
-
+            await websocket.send_json({"status": job.status, "progress": job.progress})
+            if job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
+                break
     except WebSocketDisconnect:
         logger.info("Client disconnected from progress WS for job %s", job_id)
-    finally:
-        await pubsub.unsubscribe(channel)
-        await pubsub.close()
-        await r.close()

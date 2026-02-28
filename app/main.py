@@ -1,7 +1,10 @@
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.projects import router as projects_router
 from app.api.routes import router
@@ -40,3 +43,17 @@ async def on_startup():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+if FRONTEND_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="frontend-assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve the React SPA; unknown paths fall through to index.html."""
+        file = FRONTEND_DIR / full_path
+        if file.is_file():
+            return FileResponse(file)
+        return FileResponse(FRONTEND_DIR / "index.html")
