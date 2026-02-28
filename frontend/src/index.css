@@ -1129,6 +1129,23 @@ body {
   pointer-events: none;
 }
 
+.ot-photo-dur-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  color: #fff;
+  font-size: 10px;
+  font-family: "JetBrains Mono", monospace;
+  padding: 1px 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.ot-photo-dur-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .ot-clip-remove {
   position: absolute;
   top: 2px;
@@ -1182,4 +1199,11 @@ body {
   font-size: 10px;
   font-family: "JetBrains Mono", monospace;
   text-align: center;
+  -moz-appearance: textfield;
+}
+
+.ot-dur-input::-webkit-inner-spin-button,
+.ot-dur-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

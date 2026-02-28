@@ -215,7 +215,7 @@ export function OutputTimeline({ clips, videos, playingIndex, focusedIndex, curr
             >
               {isPhoto && <span className="ot-clip-badge">IMG</span>}
               <span className="ot-clip-label">{label}</span>
-              {widthPct > 8 && editingIdx === idx ? (
+              {isPhoto && editingIdx === idx ? (
                 <input
                   className="ot-dur-input"
                   type="number"
@@ -224,6 +224,7 @@ export function OutputTimeline({ clips, videos, playingIndex, focusedIndex, curr
                   value={editValue}
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
                   onChange={(e) => setEditValue(e.target.value)}
                   onBlur={() => {
                     const v = parseFloat(editValue);
@@ -240,19 +241,21 @@ export function OutputTimeline({ clips, videos, playingIndex, focusedIndex, curr
                     }
                   }}
                 />
-              ) : widthPct > 8 ? (
-                <span
-                  className="ot-clip-dur"
-                  onDoubleClick={isPhoto ? (e) => {
+              ) : isPhoto ? (
+                <button
+                  className="ot-photo-dur-btn"
+                  title="Edit duration"
+                  onClick={(e) => {
                     e.stopPropagation();
                     setEditingIdx(idx);
                     setEditValue(String(dur));
-                  } : undefined}
-                  title={isPhoto ? "Double-click to edit duration" : undefined}
-                  style={isPhoto ? { cursor: "text" } : undefined}
+                  }}
+                  onDoubleClick={(e) => e.stopPropagation()}
                 >
-                  {formatDuration(dur)}
-                </span>
+                  {formatDuration(dur)} ✎
+                </button>
+              ) : widthPct > 8 ? (
+                <span className="ot-clip-dur">{formatDuration(dur)}</span>
               ) : null}
               <button
                 className="ot-clip-remove"
