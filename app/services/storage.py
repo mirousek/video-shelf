@@ -61,7 +61,6 @@ def get_thumbnail_path(video_id: str) -> Path:
 
 def _get_s3_client():
     kwargs: dict = {
-        "region_name": settings.aws_region,
         "config": BotoConfig(signature_version="s3v4"),
     }
     if settings.s3_endpoint:
@@ -76,7 +75,7 @@ def ensure_bucket() -> None:
     try:
         client.head_bucket(Bucket=settings.s3_bucket)
     except ClientError:
-        region = settings.aws_region
+        region = boto3.session.Session().region_name or "us-east-1"
         create_kwargs: dict = {"Bucket": settings.s3_bucket}
         if region != "us-east-1":
             create_kwargs["CreateBucketConfiguration"] = {"LocationConstraint": region}

@@ -46,7 +46,7 @@ def get_redis() -> redis_lib.Redis:
 
 
 def get_dynamodb_resource():
-    kwargs = {"region_name": settings.aws_region}
+    kwargs = {}
     if settings.aws_endpoint_url:
         kwargs["endpoint_url"] = settings.aws_endpoint_url
     return boto3.resource("dynamodb", **kwargs)
@@ -123,7 +123,7 @@ def main():
     args = parser.parse_args()
 
     print(f"Redis URL: {settings.redis_url}")
-    print(f"DynamoDB region: {settings.aws_region}")
+    print(f"DynamoDB region: {boto3.session.Session().region_name}")
     if settings.aws_endpoint_url:
         print(f"DynamoDB endpoint: {settings.aws_endpoint_url}")
     print(f"Projects table: {settings.dynamodb_projects_table}")

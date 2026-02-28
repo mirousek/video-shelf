@@ -1,3 +1,4 @@
+import boto3
 from celery import Celery
 
 from app.config import settings
@@ -13,7 +14,7 @@ celery = Celery(
 transport_opts: dict = {}
 if not settings.redis_url:
     transport_opts = {
-        "region": settings.aws_region,
+        "region": boto3.session.Session().region_name or "us-east-1",
         "queue_name_prefix": f"{settings.sqs_queue_name}-",
     }
     if settings.aws_endpoint_url:

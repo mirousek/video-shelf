@@ -10,6 +10,7 @@ class Settings(BaseSettings):
         "env_prefix": "VS_",
         "env_file": PROJECT_ROOT / ".env",
         "env_file_encoding": "utf-8",
+        "extra": "ignore",
     }
 
     app_name: str = "VideoShelf"
@@ -20,7 +21,6 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 2048
 
     # AWS
-    aws_region: str = "eu-west-1"
     aws_endpoint_url: str = ""
     dynamodb_projects_table: str = "videoshelf-projects"
     dynamodb_jobs_table: str = "videoshelf-jobs"

@@ -22,7 +22,7 @@ _table = None
 def _get_table():
     global _table
     if _table is None:
-        kwargs = {"region_name": settings.aws_region}
+        kwargs = {}
         if settings.aws_endpoint_url:
             kwargs["endpoint_url"] = settings.aws_endpoint_url
         dynamo = boto3.resource("dynamodb", **kwargs)

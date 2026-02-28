@@ -36,7 +36,7 @@ Prerequisites: Python 3.11+, Node.js 18+, FFmpeg, Redis, AWS CLI configured (`aw
 
 ```bash
 cp .env.example .env
-# Edit .env -- set VS_AWS_REGION and optionally VS_S3_BUCKET
+# Edit .env -- ensure AWS region is configured (aws configure or AWS_DEFAULT_REGION)
 ```
 
 DynamoDB and S3 are used directly on AWS (free-tier eligible, pennies at dev usage). Redis is used locally as the Celery broker only.
@@ -230,9 +230,8 @@ cd /home/ec2-user
 git clone <YOUR_REPO_URL> videoshelf
 cd videoshelf
 
-# Create .env
+# Create .env (region is picked up from the instance metadata / IAM profile)
 cat > .env << EOF
-VS_AWS_REGION='$REGION'
 VS_USE_S3=true
 VS_S3_BUCKET=videoshelf-media
 VS_SQS_QUEUE_NAME=videoshelf
@@ -283,8 +282,6 @@ All settings are configured via environment variables prefixed with `VS_`:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VS_DEBUG` | `false` | Enable debug logging |
-| `VS_AWS_REGION` | `eu-west-1` | AWS region for all services |
-| `VS_AWS_ENDPOINT_URL` | (empty) | Override for LocalStack (`http://localhost:4566`) |
 | `VS_DYNAMODB_PROJECTS_TABLE` | `videoshelf-projects` | DynamoDB table for projects |
 | `VS_DYNAMODB_JOBS_TABLE` | `videoshelf-jobs` | DynamoDB table for jobs |
 | `VS_SQS_QUEUE_NAME` | `videoshelf` | SQS queue name prefix for Celery |
@@ -293,6 +290,6 @@ All settings are configured via environment variables prefixed with `VS_`:
 | `VS_REDIS_URL` | (empty) | Redis URL (only for local dev without SQS) |
 | `VS_MAX_UPLOAD_SIZE_MB` | `2048` | Max upload size in MB |
 
-AWS credentials (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) are picked up by boto3 for all services (DynamoDB, SQS, S3). On EC2, use an IAM instance profile instead.
+AWS credentials, region, and profile are managed by boto3's standard chain -- configure via `aws configure` or set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` as environment variables. On EC2, use an IAM instance profile instead.
 
 See `.env.example` for a complete template.
