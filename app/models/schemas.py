@@ -17,6 +17,7 @@ class JobStatus(StrEnum):
 class CutSegment(BaseModel):
     """A single cut segment defined by start and end timestamps in seconds."""
 
+    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     start: float = Field(ge=0, description="Start time in seconds")
     end: float = Field(gt=0, description="End time in seconds")
 
@@ -39,6 +40,7 @@ class Clip(BaseModel):
     start: float = Field(ge=0)
     end: float = Field(gt=0)
     photo_duration: float | None = None
+    segment_id: str | None = None
 
 
 class JobCreate(BaseModel):

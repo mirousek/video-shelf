@@ -33,11 +33,40 @@ def save_project(project: Project) -> None:
     _get_redis().set(_key(project.id), project.model_dump_json())
 
 
+def _migrate_project(project: Project) -> Project:
+    """Backfill segment IDs and clip segment_id references for pre-ID projects."""
+    needs_save = False
+
+    for video in project.videos:
+        for seg in video.segments:
+            if not seg.id:
+                needs_save = True
+
+    for clip in project.output_timeline:
+        if clip.segment_id is None and clip.photo_duration is None:
+            for video in project.videos:
+                if video.video_id != clip.video_id:
+                    continue
+                match = next(
+                    (s for s in video.segments if s.start == clip.start and s.end == clip.end),
+                    None,
+                )
+                if match:
+                    clip.segment_id = match.id
+                    needs_save = True
+                    break
+
+    if needs_save:
+        save_project(project)
+
+    return project
+
+
 def get_project(project_id: str) -> Project | None:
     data = _get_redis().get(_key(project_id))
     if data is None:
         return None
-    return Project.model_validate_json(data)
+    return _migrate_project(Project.model_validate_json(data))
 
 
 def list_projects() -> list[Project]:
@@ -46,7 +75,7 @@ def list_projects() -> list[Project]:
     if not keys:
         return []
     values = r.mget(keys)
-    projects = [Project.model_validate_json(v) for v in values if v is not None]
+    projects = [_migrate_project(Project.model_validate_json(v)) for v in values if v is not None]
     projects.sort(key=lambda p: p.updated_at, reverse=True)
     return projects
 

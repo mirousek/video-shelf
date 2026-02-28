@@ -9,6 +9,9 @@ function findVideoIndex(videos: ProjectVideo[], videoId: string): number {
 function findSegmentIndex(videos: ProjectVideo[], clip: Clip): number {
   const video = videos.find((v) => v.video_id === clip.video_id);
   if (!video) return -1;
+  if (clip.segment_id) {
+    return video.segments.findIndex((s) => s.id === clip.segment_id);
+  }
   return video.segments.findIndex((s) => s.start === clip.start && s.end === clip.end);
 }
 

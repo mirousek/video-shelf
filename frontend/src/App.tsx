@@ -268,10 +268,21 @@ export default function App() {
   }, [activeIndex]);
 
   const handleOpenProject = useCallback((project: ProjectResponse) => {
+    const migratedVideos = project.videos.map((v) => ({
+      ...v,
+      segments: v.segments.map((s) => (s.id ? s : { ...s, id: crypto.randomUUID() })),
+    }));
+    const ot = (project.output_timeline ?? []).map((clip) => {
+      if (clip.segment_id || clip.photo_duration != null) return clip;
+      const video = migratedVideos.find((v) => v.video_id === clip.video_id);
+      const seg = video?.segments.find((s) => s.start === clip.start && s.end === clip.end);
+      return seg ? { ...clip, segment_id: seg.id } : clip;
+    });
+
     setProjectId(project.id);
     setProjectName(project.name);
-    setVideos(project.videos);
-    setOutputTimeline(project.output_timeline ?? []);
+    setVideos(migratedVideos);
+    setOutputTimeline(ot);
     setActiveIndex(0);
     setDuration(project.videos[0]?.video_info.duration ?? 0);
     setError(null);
@@ -314,7 +325,7 @@ export default function App() {
     if (videoId) {
       setOutputTimeline((ot) => [
         ...ot,
-        { video_id: videoId, start: seg.start, end: seg.end },
+        { video_id: videoId, start: seg.start, end: seg.end, segment_id: seg.id },
       ]);
     }
     setVideos((prev) =>
@@ -331,9 +342,9 @@ export default function App() {
     if (!seg) return;
 
     const ot = outputTimelineRef.current;
-    const clipIdx = ot.findIndex(
-      (c) => c.video_id === video.video_id && c.start === seg.start && c.end === seg.end,
-    );
+    const clipIdx = seg.id
+      ? ot.findIndex((c) => c.segment_id === seg.id)
+      : ot.findIndex((c) => c.video_id === video.video_id && c.start === seg.start && c.end === seg.end);
     const removedClip = clipIdx >= 0 ? { idx: clipIdx, clip: ot[clipIdx] } : null;
     pushUndo({ type: "segment-delete", videoIndex, segIndex, segment: seg, removedClip });
 
@@ -355,9 +366,9 @@ export default function App() {
     const video = videos[videoIndex];
     const seg = video?.segments[segIndex];
     if (!video || !seg) return;
-    const clipIdx = outputTimeline.findIndex(
-      (c) => c.video_id === video.video_id && c.start === seg.start && c.end === seg.end,
-    );
+    const clipIdx = seg.id
+      ? outputTimeline.findIndex((c) => c.segment_id === seg.id)
+      : outputTimeline.findIndex((c) => c.video_id === video.video_id && c.start === seg.start && c.end === seg.end);
     setFocusedClipIndex(clipIdx >= 0 ? clipIdx : null);
     setPlayingSeg({ vi: videoIndex, si: segIndex });
     if (videoIndex !== activeIndex) {
@@ -378,7 +389,8 @@ export default function App() {
       if (oldSeg) {
         setOutputTimeline((ot) =>
           ot.map((c) =>
-            c.video_id === video.video_id && c.start === oldSeg.start && c.end === oldSeg.end
+            (oldSeg.id && c.segment_id === oldSeg.id) ||
+            (!oldSeg.id && c.video_id === video.video_id && c.start === oldSeg.start && c.end === oldSeg.end)
               ? { ...c, start: seg.start, end: seg.end }
               : c,
           ),
@@ -425,7 +437,9 @@ export default function App() {
     }
     setPlayingClipIndex(idx);
     setFocusedClipIndex(null);
-    const si = videos[vi].segments.findIndex((s) => s.start === clip.start && s.end === clip.end);
+    const si = clip.segment_id
+      ? videos[vi].segments.findIndex((s) => s.id === clip.segment_id)
+      : videos[vi].segments.findIndex((s) => s.start === clip.start && s.end === clip.end);
     setPlayingSeg(si >= 0 ? { vi, si } : null);
 
     if (clip.photo_duration != null) {
@@ -497,7 +511,9 @@ export default function App() {
     if (vi < 0) return;
     setPlayingClipIndex(null);
     setFocusedClipIndex(clipIndex);
-    const si = videos[vi].segments.findIndex((s) => s.start === clip.start && s.end === clip.end);
+    const si = clip.segment_id
+      ? videos[vi].segments.findIndex((s) => s.id === clip.segment_id)
+      : videos[vi].segments.findIndex((s) => s.start === clip.start && s.end === clip.end);
     setPlayingSeg(si >= 0 ? { vi, si } : null);
     pendingPlayRef.current = null;
 
@@ -556,7 +572,7 @@ export default function App() {
     if (!seg) return;
     setOutputTimeline((ot) => [
       ...ot,
-      { video_id: video.video_id, start: seg.start, end: seg.end },
+      { video_id: video.video_id, start: seg.start, end: seg.end, segment_id: seg.id },
     ]);
   }, [videos]);
 
@@ -566,7 +582,7 @@ export default function App() {
     const defaultDuration = 5;
     setOutputTimeline((ot) => [
       ...ot,
-      { video_id: video.video_id, start: 0, end: defaultDuration, photo_duration: defaultDuration },
+      { video_id: video.video_id, start: 0, end: defaultDuration, photo_duration: defaultDuration, segment_id: null },
     ]);
   }, [videos]);
 

@@ -80,7 +80,7 @@ export function Timeline({
     const time = posToTime(e.clientX);
     const segLen = Math.min(5, duration - time);
     if (segLen > 0.1) {
-      onSegmentAdd({ start: time, end: time + segLen });
+      onSegmentAdd({ id: crypto.randomUUID(), start: time, end: time + segLen });
     }
   };
 

@@ -29,7 +29,7 @@ export function ExportPanel({ videos, outputTimeline }: Props) {
   const allClips: Clip[] = outputTimeline.length > 0
     ? outputTimeline
     : videos.flatMap((v) =>
-        v.segments.map((s) => ({ video_id: v.video_id, start: s.start, end: s.end })),
+        v.segments.map((s) => ({ video_id: v.video_id, start: s.start, end: s.end, segment_id: s.id })),
       );
 
   const handleExport = async () => {

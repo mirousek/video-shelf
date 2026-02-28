@@ -15,6 +15,7 @@ export interface UploadResponse {
 }
 
 export interface CutSegment {
+  id: string;
   start: number;
   end: number;
 }
@@ -24,6 +25,7 @@ export interface Clip {
   start: number;
   end: number;
   photo_duration?: number;
+  segment_id?: string | null;
 }
 
 export interface JobCreate {
