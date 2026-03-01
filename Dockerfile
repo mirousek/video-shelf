@@ -10,7 +10,7 @@ RUN npm run build
 FROM python:3.12-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg supervisor && \
+    apt-get install -y --no-install-recommends ffmpeg supervisor curl && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -22,8 +22,10 @@ COPY . .
 COPY --from=frontend /frontend/dist /app/frontend/dist
 
 COPY deploy/supervisord.conf /etc/supervisor/conf.d/videoshelf.conf
+COPY deploy/entrypoint.sh /entrypoint.sh
 
 ENV PORT=8000
 EXPOSE 8000
 
+#ENTRYPOINT ["/entrypoint.sh"]
 CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/videoshelf.conf"]

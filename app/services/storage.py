@@ -74,10 +74,16 @@ def ensure_bucket() -> None:
     client = _get_s3_client()
     try:
         client.head_bucket(Bucket=settings.s3_bucket)
-    except ClientError:
-        region = boto3.session.Session().region_name or "us-east-1"
+    except ClientError as exc:
+        code = exc.response["Error"].get("Code", "")
+        if code in ("403", "Forbidden"):
+            logger.debug("S3 bucket %s exists (no HeadBucket permission, that's OK)", settings.s3_bucket)
+            return
+        if code not in ("404", "NoSuchBucket"):
+            raise
+        region = boto3.session.Session().region_name
         create_kwargs: dict = {"Bucket": settings.s3_bucket}
-        if region != "us-east-1":
+        if region and region != "us-east-1":
             create_kwargs["CreateBucketConfiguration"] = {"LocationConstraint": region}
         client.create_bucket(**create_kwargs)
         logger.info("Created S3 bucket: %s", settings.s3_bucket)
