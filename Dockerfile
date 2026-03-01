@@ -23,6 +23,7 @@ COPY --from=frontend /frontend/dist /app/frontend/dist
 
 COPY deploy/supervisord.conf /etc/supervisor/conf.d/videoshelf.conf
 
+ENV PORT=8000
 EXPOSE 8000
 
 CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/videoshelf.conf"]
